@@ -2,12 +2,12 @@
    1. SUPABASE CONFIG — replace with YOUR project's values.
    Supabase dashboard → Project Settings → API.
    ========================================================= */
-const SUPABASE_URL = "https://balaeixgbhcxwhukhbjl.supabase.co/";       // e.g. https://xxxxx.supabase.co
+const SUPABASE_URL = "https://balaeixgbhcxwhukhbjl.supabase.co";       // e.g. https://xxxxx.supabase.co
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbGFlaXhnYmhjeHdodWtoYmpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTE4NTIsImV4cCI6MjEwNDQ2Nzg1Mn0.MIU81DDeb8tVlRNQuWrw-srnoRFb-2cQyJ78uVWR4pw";  // the "anon public" key, never the service_role key
 
 const CONFIG_IS_SET = SUPABASE_URL !== "REPLACE_ME" && SUPABASE_ANON_KEY !== "REPLACE_ME";
 
-let supabase = null;
+let db = null;
 let currentSession = null;
 let currentProfile = null;
 let chosenRole = null;
@@ -42,13 +42,13 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && modalOrder
 
 async function init(){
   if (!CONFIG_IS_SET) { showView('view-setup'); return; }
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  supabase.auth.onAuthStateChange((_event, session) => { handleAuthChange(session); });
-  const { data: { session } } = await supabase.auth.getSession();
+  db.auth.onAuthStateChange((_event, session) => { handleAuthChange(session); });
+  const { data: { session } } = await db.auth.getSession();
   handleAuthChange(session);
 
-  document.getElementById('btn-logout').addEventListener('click', () => supabase.auth.signOut());
+  document.getElementById('btn-logout').addEventListener('click', () => db.auth.signOut());
 }
 
 async function handleAuthChange(session){
@@ -106,7 +106,7 @@ async function submitAuth(){
   btn.disabled = true;
 
   if (authMode === 'signup') {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await db.auth.signUp({ email, password });
     btn.disabled = false;
     if (error) { msgEl.innerHTML = `<div class="notice error" style="margin-top:12px;">${esc(error.message)}</div>`; return; }
     if (!data.session) {
@@ -116,7 +116,7 @@ async function submitAuth(){
     }
     // onAuthStateChange fires and routes onward; profile gets created with chosenRole.
   } else {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await db.auth.signInWithPassword({ email, password });
     btn.disabled = false;
     if (error) { msgEl.innerHTML = `<div class="notice error" style="margin-top:12px;">${esc(error.message)}</div>`; return; }
     // onAuthStateChange fires and routes onward.
@@ -127,10 +127,10 @@ async function submitAuth(){
 async function loadProfileAndRoute(){
   const uid = currentSession.user.id;
   const email = currentSession.user.email;
-  let { data: profile } = await supabase.from('profiles').select('*').eq('id', uid).maybeSingle();
+  let { data: profile } = await db.from('profiles').select('*').eq('id', uid).maybeSingle();
   if (!profile) {
     const role = chosenRole || 'buyer';
-    const { data: inserted, error } = await supabase.from('profiles').insert({ id: uid, email, role }).select().maybeSingle();
+    const { data: inserted, error } = await db.from('profiles').insert({ id: uid, email, role }).select().maybeSingle();
     if (error) { console.error(error); return; }
     profile = inserted;
   }
@@ -300,7 +300,7 @@ async function saveFarmerProfile(){
   if (!/^\d{6}$/.test(pincode)) { msg.innerHTML = '<div class="notice error" style="margin-top:12px;">PIN code should be 6 digits.</div>'; return; }
   msg.innerHTML = '<div class="notice" style="margin-top:12px;">Locating your village...</div>';
   const coords = await geocodePincode(pincode);
-  const { error } = await supabase.from('profiles').update({
+  const { error } = await db.from('profiles').update({
     name, mobile, land, village, pincode, lat: coords?.lat ?? null, lon: coords?.lon ?? null
   }).eq('id', currentSession.user.id);
   if (error) { msg.innerHTML = `<div class="notice error" style="margin-top:12px;">${esc(error.message)}</div>`; return; }
@@ -317,7 +317,7 @@ async function saveBuyerProfile(){
   if (!/^\d{6}$/.test(pincode)) { msg.innerHTML = '<div class="notice error" style="margin-top:12px;">PIN code should be 6 digits.</div>'; return; }
   msg.innerHTML = '<div class="notice" style="margin-top:12px;">Locating your address...</div>';
   const coords = await geocodePincode(pincode);
-  const { error } = await supabase.from('profiles').update({
+  const { error } = await db.from('profiles').update({
     name, mobile, address, pincode, lat: coords?.lat ?? null, lon: coords?.lon ?? null
   }).eq('id', currentSession.user.id);
   if (error) { msg.innerHTML = `<div class="notice error" style="margin-top:12px;">${esc(error.message)}</div>`; return; }
@@ -390,7 +390,7 @@ async function addProduct(){
   const msgEl = document.getElementById('product-form-message');
   if (!name || isNaN(price) || price <= 0) { msgEl.innerHTML = '<div class="notice error" style="margin-top:12px;">Enter a produce name and a rate greater than 0.</div>'; return; }
 
-  const { error } = await supabase.from('products').insert({
+  const { error } = await db.from('products').insert({
     farmer_id: currentProfile.id, name, category, price, unit,
     qty: isNaN(qty) ? null : qty, notes
   });
@@ -401,17 +401,17 @@ async function addProduct(){
 }
 async function deleteProduct(id){
   if (!confirm('Remove this listing?')) return;
-  await supabase.from('products').delete().eq('id', id);
+  await db.from('products').delete().eq('id', id);
   await renderFarmerProducts();
 }
 
 async function renderFarmerProducts(){
-  const { data: mine, error } = await supabase.from('products')
+  const { data: mine, error } = await db.from('products')
     .select('*').eq('farmer_id', currentProfile.id).order('listed_at', { ascending: false });
   if (error) { console.error(error); return; }
   farmerProductsCache = mine || [];
 
-  const { data: accepted } = await supabase.from('orders')
+  const { data: accepted } = await db.from('orders')
     .select('product_id, qty_requested').eq('farmer_id', currentProfile.id).eq('status', 'accepted');
   const soldMap = {};
   (accepted || []).forEach(o => { soldMap[o.product_id] = (soldMap[o.product_id] || 0) + Number(o.qty_requested); });
@@ -458,7 +458,7 @@ async function renderFarmerProducts(){
 }
 
 async function renderFarmerRequests(){
-  const { data: reqs, error } = await supabase.from('orders')
+  const { data: reqs, error } = await db.from('orders')
     .select('*, buyer:profiles!buyer_id(*)')
     .eq('farmer_id', currentProfile.id)
     .order('requested_at', { ascending: false });
@@ -485,12 +485,12 @@ async function loadBuyerData(){
 }
 
 async function renderMarketplace(){
-  const { data: products, error } = await supabase.from('products')
+  const { data: products, error } = await db.from('products')
     .select('*, farmer:profiles!farmer_id(*)').order('listed_at', { ascending: false });
   if (error) { console.error(error); return; }
   marketplaceCache = products || [];
 
-  const { data: accepted } = await supabase.from('orders').select('product_id, qty_requested').eq('status', 'accepted');
+  const { data: accepted } = await db.from('orders').select('product_id, qty_requested').eq('status', 'accepted');
   const soldMap = {};
   (accepted || []).forEach(o => { soldMap[o.product_id] = (soldMap[o.product_id] || 0) + Number(o.qty_requested); });
 
@@ -549,7 +549,7 @@ async function requestProduct(productId){
   const qtyNum = parseFloat(qty);
   if (isNaN(qtyNum) || qtyNum <= 0) { alert('Enter a valid quantity.'); return; }
 
-  const { error } = await supabase.from('orders').insert({
+  const { error } = await db.from('orders').insert({
     product_id: p.id, product_name: p.name, unit: p.unit, price: p.price,
     qty_requested: qtyNum, farmer_id: p.farmer_id, buyer_id: currentProfile.id
   });
@@ -560,7 +560,7 @@ async function requestProduct(productId){
 }
 
 async function renderBuyerOrders(){
-  const { data: mine, error } = await supabase.from('orders')
+  const { data: mine, error } = await db.from('orders')
     .select('*, farmer:profiles!farmer_id(*)')
     .eq('buyer_id', currentProfile.id)
     .order('requested_at', { ascending: false });
@@ -615,7 +615,7 @@ function orderRowHtml(o, viewerRole){
 async function respondToOrder(id, status){
   const patch = { status };
   if (status === 'accepted') patch.accepted_at = new Date().toISOString();
-  const { error } = await supabase.from('orders').update(patch).eq('id', id);
+  const { error } = await db.from('orders').update(patch).eq('id', id);
   if (error) { alert(error.message); return; }
   await renderFarmerRequests(); await renderBuyerOrders();
   if (status === 'accepted') openOrderModal(id, 'farmer');
@@ -666,7 +666,7 @@ async function buildOrderPanelHtml(o, viewerRole){
     deliveryStatusHtml = `<div style="margin-bottom:12px;">${lines.join('')}</div>`;
   }
 
-  const { data: messages } = await supabase.from('order_messages').select('*, sender:profiles!sender_id(name)').eq('order_id', o.id).order('created_at', { ascending: true });
+  const { data: messages } = await db.from('order_messages').select('*, sender:profiles!sender_id(name)').eq('order_id', o.id).order('created_at', { ascending: true });
   const msgs = (messages && messages.length)
     ? messages.map(m => `<div class="msg"><span class="who">${m.sender_id === currentProfile.id ? 'You' : esc(m.sender?.name || 'User')}</span> <span class="dt-cell">${formatDT(m.created_at)}</span><br>${esc(m.text)}</div>`).join('')
     : '<div class="empty" style="padding:6px 0;">No messages yet — coordinate pickup/delivery timing here.</div>';
@@ -709,22 +709,22 @@ async function refreshEverythingAndModal(){
 }
 
 async function markDelivered(orderId){
-  await supabase.from('orders').update({ delivered_at: new Date().toISOString() }).eq('id', orderId);
+  await db.from('orders').update({ delivered_at: new Date().toISOString() }).eq('id', orderId);
   await refreshEverythingAndModal();
 }
 async function confirmReceived(orderId){
-  await supabase.from('orders').update({ received_at: new Date().toISOString() }).eq('id', orderId);
+  await db.from('orders').update({ received_at: new Date().toISOString() }).eq('id', orderId);
   await refreshEverythingAndModal();
 }
 async function setDeliveryMethod(orderId, method){
-  await supabase.from('orders').update({ delivery_method: method }).eq('id', orderId);
+  await db.from('orders').update({ delivery_method: method }).eq('id', orderId);
   await refreshEverythingAndModal();
 }
 async function sendOrderMessage(orderId){
   const input = document.getElementById('msg-input-' + orderId);
   const text = input.value.trim();
   if (!text) return;
-  await supabase.from('order_messages').insert({ order_id: orderId, sender_id: currentProfile.id, text });
+  await db.from('order_messages').insert({ order_id: orderId, sender_id: currentProfile.id, text });
   await refreshEverythingAndModal();
 }
 function bindMsgInputs(){
@@ -735,7 +735,7 @@ function bindMsgInputs(){
 
 /* ---------- ADMIN ---------- */
 async function loadAdminData(){
-  const { data: all, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+  const { data: all, error } = await db.from('profiles').select('*').order('created_at', { ascending: false });
   if (error) { console.error(error); return; }
   adminUsersCache = all || [];
   renderAdminTables();
@@ -804,7 +804,7 @@ function clearAdminAllDateFilter(){
   renderAdminTables();
 }
 async function setUserStatus(userId, status){
-  await supabase.from('profiles').update({ status }).eq('id', userId);
+  await db.from('profiles').update({ status }).eq('id', userId);
   await loadAdminData();
 }
 async function suspendUser(userId){
@@ -826,7 +826,7 @@ function orderStage(o){
 }
 
 async function fetchTransactions({ farmerId, buyerId, from, to }){
-  let q = supabase.from('orders')
+  let q = db.from('orders')
     .select('*, farmer:profiles!farmer_id(name,email), buyer:profiles!buyer_id(name,email)')
     .eq('status', 'accepted')
     .order('accepted_at', { ascending: false });
@@ -898,8 +898,8 @@ function clearBuyerReportDate(){
 async function renderAdminReport(){
   const rows = await fetchTransactions({ from: adminReportDateFilter.from, to: adminReportDateFilter.to });
   const total = rows.reduce((s,o) => s + orderTotal(o), 0);
-  const { count: activeFarmers } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role','farmer').eq('status','approved');
-  const { count: activeBuyers } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role','buyer').eq('status','approved');
+  const { count: activeFarmers } = await db.from('profiles').select('id', { count: 'exact', head: true }).eq('role','farmer').eq('status','approved');
+  const { count: activeBuyers } = await db.from('profiles').select('id', { count: 'exact', head: true }).eq('role','buyer').eq('status','approved');
   document.getElementById('admin-report-summary').innerHTML = `
     <div class="stat-box"><div class="stat-value">${rows.length}</div><div class="stat-label">Completed transactions</div></div>
     <div class="stat-box"><div class="stat-value">₹${total.toLocaleString('en-IN')}</div><div class="stat-label">Total platform value</div></div>

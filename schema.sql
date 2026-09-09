@@ -210,7 +210,27 @@ alter publication supabase_realtime add table order_messages;
 alter publication supabase_realtime add table profiles;
 
 -- ------------------------------------------------------------
--- 6. First admin account
+-- 6. Auto-confirm new signups (skips Supabase's email-confirmation step)
+-- ------------------------------------------------------------
+-- This app uses plain email + password login, not email links/codes, so there's
+-- nothing for a user to click anyway. This trigger confirms every new account
+-- the instant it's created, regardless of the dashboard's "Confirm email" toggle
+-- or the free-tier email rate limit.
+create or replace function public.auto_confirm_user()
+returns trigger as $$
+begin
+  new.email_confirmed_at = now();
+  new.confirmed_at = now();
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger trg_auto_confirm_user
+  before insert on auth.users
+  for each row execute function public.auto_confirm_user();
+
+-- ------------------------------------------------------------
+-- 7. First admin account
 -- ------------------------------------------------------------
 -- After you sign up once through the app (as either role — it won't matter),
 -- come back here and run, replacing the email:
