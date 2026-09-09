@@ -1,0 +1,14 @@
+{
+  "name": "Bhumiputra-Bandhu — Direct from Farm",
+  "short_name": "BhumiputraBandhu",
+  "description": "Farmers list produce and set their own rates. Buyers browse and request directly.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F5F1E2",
+  "theme_color": "#14311F",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
