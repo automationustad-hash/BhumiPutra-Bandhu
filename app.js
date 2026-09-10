@@ -771,11 +771,13 @@ function renderAdminTables(){
       <th>Email</th><th>Role</th><th>Name</th><th>Mobile</th><th>Joined on</th><th>Status</th><th>Actions</th>
     </tr></thead><tbody>
       ${allFiltered.map(u => {
-        let actions = '';
+        let statusAction = '';
         if (u.role !== 'admin') {
-          if (u.status === 'suspended') actions = `<button class="gold small" onclick="setUserStatus('${u.id}','approved')">Reactivate</button>`;
-          else if (u.status === 'approved') actions = `<button class="secondary small" onclick="suspendUser('${u.id}')">Suspend</button>`;
+          if (u.status === 'suspended') statusAction = `<button class="gold small" onclick="setUserStatus('${u.id}','approved')">Reactivate</button>`;
+          else if (u.status === 'approved') statusAction = `<button class="secondary small" onclick="suspendUser('${u.id}')">Suspend</button>`;
         }
+        const roleSwap = u.role === 'farmer' ? 'buyer' : (u.role === 'buyer' ? 'farmer' : null);
+        const roleAction = roleSwap ? `<button class="secondary small" onclick="changeUserRole('${u.id}','${roleSwap}')">Make ${roleSwap}</button>` : '';
         return `<tr>
           <td class="name-cell">${esc(u.email)}</td>
           <td><span class="badge ${u.role}">${u.role}</span></td>
@@ -783,11 +785,17 @@ function renderAdminTables(){
           <td>${esc(u.mobile || '—')}</td>
           <td class="dt-cell">${formatDT(u.created_at)}</td>
           <td><span class="status-pill status-${u.status}">${u.status}</span></td>
-          <td class="actions-cell">${actions}</td>
+          <td class="actions-cell">${statusAction}${roleAction}</td>
         </tr>`;
       }).join('')}
     </tbody></table>`;
   }
+}
+async function changeUserRole(userId, newRole){
+  if (!confirm(`Change this account to ${newRole}? Their approval status will stay as-is — you may want to review it separately.`)) return;
+  const { error } = await db.from('profiles').update({ role: newRole }).eq('id', userId);
+  if (error) { alert(error.message); return; }
+  await loadAdminData();
 }
 function setAdminPendingDateFilter(key, value){ adminPendingDateFilter[key] = value; renderAdminTables(); }
 function clearAdminPendingDateFilter(){
