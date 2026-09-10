@@ -347,15 +347,19 @@
       <div class="card" id="add-product-card" style="display:none;margin-bottom:24px;">
         <h3 style="margin-bottom:16px;" data-i18n="i18n_h_list_new_product">List new product</h3>
         <div class="grid-2">
-          <div class="field"><label data-i18n="i18n_lbl_category">Category</label>
-            <select id="p-category" onchange="onCategoryChange()"></select>
-          </div>
           <div class="field"><label data-i18n="i18n_lbl_product_name">Product name</label>
-            <select id="p-name-select" onchange="onProductNameChange()"></select>
+            <input id="p-name" placeholder="e.g. Tomatoes">
           </div>
-          <div class="field" id="p-name-custom-field" style="display:none;">
-            <label>Enter product name</label>
-            <input id="p-name-custom" placeholder="e.g. Dragon Fruit">
+          <div class="field"><label data-i18n="i18n_lbl_category">Category</label>
+            <select id="p-category">
+              <option>Vegetables</option>
+              <option>Fruits</option>
+              <option>Grains</option>
+              <option>Pulses</option>
+              <option>Dairy</option>
+              <option>Spices</option>
+              <option>Other</option>
+            </select>
           </div>
           <div class="field"><label data-i18n="i18n_lbl_rate">Your rate (₹)</label><input id="p-price" type="number" min="0" step="0.01" placeholder="e.g. 25"></div>
           <div class="field"><label data-i18n="i18n_lbl_per_unit">Per unit</label><select id="p-unit"><option>kg</option><option>quintal</option><option>dozen</option><option>litre</option><option>piece</option></select></div>
@@ -498,4 +502,3 @@
 <script src="app.js"></script>
 </body>
 </html>
-"Replace index.html content directly"

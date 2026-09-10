@@ -436,25 +436,7 @@ function toggleAddForm(forceState){
   const show = typeof forceState === 'boolean' ? forceState : card.style.display === 'none';
   card.style.display = show ? 'block' : 'none';
   btn.style.display = show ? 'none' : 'inline-block';
-  if (!show) { document.getElementById('product-form-message').innerHTML = ''; return; }
-  populateCategorySelect();
-  onCategoryChange();
-}
-function populateCategorySelect(){
-  const sel = document.getElementById('p-category');
-  sel.innerHTML = CATEGORY_LIST.map(c => `<option value="${c}">${c}</option>`).join('');
-}
-function onCategoryChange(){
-  const category = document.getElementById('p-category').value;
-  const list = PRODUCT_CATALOG[category] || [];
-  const nameSelect = document.getElementById('p-name-select');
-  const options = list.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
-  nameSelect.innerHTML = options + `<option value="__other__">Other (type it in)</option>`;
-  onProductNameChange();
-}
-function onProductNameChange(){
-  const isOther = document.getElementById('p-name-select').value === '__other__';
-  document.getElementById('p-name-custom-field').style.display = isOther ? 'block' : 'none';
+  if (!show) document.getElementById('product-form-message').innerHTML = '';
 }
 
 /* ---------- FARMER DATA ---------- */
@@ -464,17 +446,14 @@ async function loadFarmerData(){
 }
 
 async function addProduct(){
+  const name = document.getElementById('p-name').value.trim();
   const category = document.getElementById('p-category').value;
-  const nameSelectValue = document.getElementById('p-name-select').value;
-  const name = nameSelectValue === '__other__'
-    ? document.getElementById('p-name-custom').value.trim()
-    : nameSelectValue;
   const price = parseFloat(document.getElementById('p-price').value);
   const unit = document.getElementById('p-unit').value;
   const qty = parseFloat(document.getElementById('p-qty').value);
   const notes = document.getElementById('p-notes').value.trim();
   const msgEl = document.getElementById('product-form-message');
-  if (!name) { msgEl.innerHTML = '<div class="notice error" style="margin-top:12px;">Pick a product name, or choose "Other" and type one in.</div>'; return; }
+  if (!name) { msgEl.innerHTML = '<div class="notice error" style="margin-top:12px;">Enter a product name.</div>'; return; }
   if (isNaN(price) || price <= 0) { msgEl.innerHTML = '<div class="notice error" style="margin-top:12px;">Enter a rate greater than 0.</div>'; return; }
 
   const { error } = await db.from('products').insert({
@@ -482,8 +461,7 @@ async function addProduct(){
     qty: isNaN(qty) ? null : qty, notes
   });
   if (error) { msgEl.innerHTML = `<div class="notice error" style="margin-top:12px;">${esc(error.message)}</div>`; return; }
-  ['p-price','p-qty','p-notes'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('p-name-custom').value = '';
+  ['p-name','p-price','p-qty','p-notes'].forEach(id => document.getElementById(id).value = '');
   await renderFarmerProducts();
   toggleAddForm(false);
 }
