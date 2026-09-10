@@ -2,8 +2,8 @@
    1. SUPABASE CONFIG — replace with YOUR project's values.
    Supabase dashboard → Project Settings → API.
    ========================================================= */
-const SUPABASE_URL = "https://balaeixgbhcxwhukhbjl.supabase.co";       // e.g. https://xxxxx.supabase.co
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbGFlaXhnYmhjeHdodWtoYmpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTE4NTIsImV4cCI6MjEwNDQ2Nzg1Mn0.MIU81DDeb8tVlRNQuWrw-srnoRFb-2cQyJ78uVWR4pw";  // the "anon public" key, never the service_role key
+const SUPABASE_URL = "REPLACE_ME";       // e.g. https://xxxxx.supabase.co
+const SUPABASE_ANON_KEY = "REPLACE_ME";  // the "anon public" key, never the service_role key
 
 const CONFIG_IS_SET = SUPABASE_URL !== "REPLACE_ME" && SUPABASE_ANON_KEY !== "REPLACE_ME";
 
