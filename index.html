@@ -60,7 +60,17 @@
   label{font-size:0.85rem;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;}
   .field{margin-bottom:16px;}
   main{max-width:1080px;margin:0 auto;padding:40px 20px 80px;}
-  .view{display:none;} .view.active{display:block;}
+  .view{display:none;} .view.active{display:block;position:relative;}
+  .auth-scene{position:absolute;top:0;left:50%;transform:translateX(-50%);width:min(1100px,100vw);height:420px;z-index:0;pointer-events:none;}
+  #view-auth{padding-top:20px;}
+  #view-auth .center-card{position:relative;z-index:1;}
+  main{position:relative;}
+  main::before{
+    content:'';position:absolute;inset:0;pointer-events:none;z-index:-1;opacity:0.5;
+    background-image:
+      radial-gradient(circle at 6px 6px, rgba(22,60,38,0.05) 1.4px, transparent 1.5px);
+    background-size:34px 34px;
+  }
   .card{
     background:rgba(255,255,255,0.82);backdrop-filter:blur(6px);
     border:1px solid rgba(255,255,255,0.6);border-radius:16px;padding:24px;box-shadow:var(--shadow);
@@ -166,13 +176,25 @@
 <header class="topbar">
   <div class="topbar-inner">
     <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 40 40" style="flex-shrink:0;">
+        <path d="M20 34 C20 22 12 16 6 14 C8 24 13 30 20 34 Z" fill="var(--gold)"/>
+        <path d="M20 34 C20 20 28 13 35 11 C33 22 27 30 20 34 Z" fill="#F3C25E"/>
+        <line x1="20" y1="34" x2="20" y2="20" stroke="#8A5A0A" stroke-width="1.5" opacity="0.5"/>
+      </svg>
       <span class="brand-mark">Bhumiputra-Bandhu</span>
       <span class="brand-tag">direct from farm</span>
     </div>
-    <div id="topbar-user" class="user-chip" style="display:none;">
-      <span id="topbar-email"></span>
-      <span id="topbar-role" class="badge"></span>
-      <button class="secondary small" id="btn-logout">Log out</button>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <select id="lang-select" class="filter-input" style="width:auto;background:rgba(255,255,255,0.15);color:#F3EFDD;border-color:rgba(255,255,255,0.3);" onchange="setLanguage(this.value)">
+        <option value="en">English</option>
+        <option value="hi">हिन्दी</option>
+        <option value="gu">ગુજરાતી</option>
+      </select>
+      <div id="topbar-user" class="user-chip" style="display:none;">
+        <span id="topbar-email"></span>
+        <span id="topbar-role" class="badge"></span>
+        <button class="secondary small" id="btn-logout" data-i18n="logout">Log out</button>
+      </div>
     </div>
   </div>
 </header>
@@ -194,28 +216,52 @@
 
   <!-- AUTH: email -->
   <div class="view" id="view-auth">
+    <svg class="auth-scene" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="860" cy="90" r="70" fill="var(--gold)" opacity="0.35"/>
+      <g opacity="0.28">
+        <line x1="860" y1="0" x2="860" y2="30" stroke="var(--gold)" stroke-width="4"/>
+        <line x1="940" y1="30" x2="915" y2="50" stroke="var(--gold)" stroke-width="4"/>
+        <line x1="960" y1="90" x2="930" y2="90" stroke="var(--gold)" stroke-width="4"/>
+        <line x1="940" y1="150" x2="915" y2="130" stroke="var(--gold)" stroke-width="4"/>
+      </g>
+      <path d="M0,320 C150,270 300,340 480,300 C650,265 800,330 1000,290 L1000,500 L0,500 Z" fill="var(--sky)" opacity="0.12"/>
+      <path d="M0,380 C180,330 340,400 520,360 C700,320 850,390 1000,350 L1000,500 L0,500 Z" fill="var(--ink)" opacity="0.16"/>
+      <path d="M0,430 C200,400 380,450 560,420 C740,390 880,440 1000,415 L1000,500 L0,500 Z" fill="var(--ink)" opacity="0.28"/>
+      <g opacity="0.5">
+        <path d="M90,430 Q90,380 130,360 Q140,400 120,430 Z" fill="var(--ink-soft)"/>
+        <path d="M110,430 Q145,395 170,405 Q160,425 130,430 Z" fill="var(--ink)"/>
+        <path d="M900,420 Q900,370 940,350 Q950,390 930,420 Z" fill="var(--ink-soft)"/>
+        <path d="M920,420 Q955,385 980,395 Q970,415 940,420 Z" fill="var(--ink)"/>
+      </g>
+      <g opacity="0.4">
+        <ellipse cx="230" cy="450" rx="14" ry="18" fill="var(--coral)"/>
+        <ellipse cx="255" cy="455" rx="12" ry="16" fill="var(--gold)"/>
+        <ellipse cx="750" cy="455" rx="13" ry="17" fill="var(--gold)"/>
+        <ellipse cx="775" cy="450" rx="14" ry="18" fill="var(--coral)"/>
+      </g>
+    </svg>
     <div class="card center-card stack">
       <div>
         <h2 id="auth-heading">Welcome back</h2>
         <p class="helptext" style="margin-top:6px;" id="auth-subheading">Log in with your email and password.</p>
       </div>
       <div id="auth-role-step" style="display:none;">
-        <label>I am a...</label>
+        <label data-i18n="i18n_lbl_i_am_a">I am a...</label>
         <div class="role-choice">
           <div class="role-option" data-role="farmer" onclick="selectRole('farmer')">
-            <strong>Farmer</strong><span>I sell farm produce</span>
+            <strong data-i18n="i18n_role_farmer">Farmer</strong><span data-i18n="i18n_role_farmer_desc">I sell farm produce</span>
           </div>
           <div class="role-option" data-role="buyer" onclick="selectRole('buyer')">
-            <strong>Buyer</strong><span>I want to buy produce</span>
+            <strong data-i18n="i18n_role_buyer">Buyer</strong><span data-i18n="i18n_role_buyer_desc">I want to buy produce</span>
           </div>
         </div>
       </div>
       <div class="field">
-        <label for="auth-email">Email address</label>
+        <label for="auth-email" data-i18n="i18n_lbl_email">Email address</label>
         <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
       </div>
       <div class="field">
-        <label for="auth-password">Password</label>
+        <label for="auth-password" data-i18n="i18n_lbl_password">Password</label>
         <input type="password" id="auth-password" placeholder="At least 6 characters" autocomplete="current-password">
       </div>
       <button class="gold" id="btn-auth-submit" onclick="submitAuth()" style="width:100%;">Log in</button>
@@ -231,11 +277,11 @@
   <div class="view" id="view-profile-farmer">
     <div class="card center-card stack">
       <div><h2>Complete your profile</h2><p class="helptext" style="margin-top:6px;">Buyers see this once you accept their order.</p></div>
-      <div class="field"><label>Full name</label><input id="pf-name" placeholder="e.g. Ramesh Patel"></div>
-      <div class="field"><label>Mobile number</label><input id="pf-mobile" placeholder="10-digit mobile number"></div>
-      <div class="field"><label>Land space (acres/bigha)</label><input id="pf-land" placeholder="e.g. 3 acres"></div>
-      <div class="field"><label>Village</label><input id="pf-village" placeholder="e.g. Sachin"></div>
-      <div class="field"><label>PIN code</label><input id="pf-pincode" maxlength="6" placeholder="e.g. 394230"></div>
+      <div class="field"><label data-i18n="i18n_lbl_full_name">Full name</label><input id="pf-name" placeholder="e.g. Ramesh Patel"></div>
+      <div class="field"><label data-i18n="i18n_lbl_mobile">Mobile number</label><input id="pf-mobile" placeholder="10-digit mobile number"></div>
+      <div class="field"><label data-i18n="i18n_lbl_land">Land space (acres/bigha)</label><input id="pf-land" placeholder="e.g. 3 acres"></div>
+      <div class="field"><label data-i18n="i18n_lbl_village">Village</label><input id="pf-village" placeholder="e.g. Sachin"></div>
+      <div class="field"><label data-i18n="i18n_lbl_pincode">PIN code</label><input id="pf-pincode" maxlength="6" placeholder="e.g. 394230"></div>
       <button class="gold" style="width:100%;" onclick="saveFarmerProfile()">Save and continue</button>
       <div id="pf-message"></div>
     </div>
@@ -245,10 +291,10 @@
   <div class="view" id="view-profile-buyer">
     <div class="card center-card stack">
       <div><h2>Complete your profile</h2><p class="helptext" style="margin-top:6px;">Farmers see this once they accept your order.</p></div>
-      <div class="field"><label>Full name</label><input id="pb-name" placeholder="e.g. Sneha Shah"></div>
-      <div class="field"><label>Mobile number</label><input id="pb-mobile" placeholder="10-digit mobile number"></div>
-      <div class="field"><label>Delivery address</label><textarea id="pb-address" rows="2" placeholder="House/street, area, city"></textarea></div>
-      <div class="field"><label>PIN code</label><input id="pb-pincode" maxlength="6" placeholder="e.g. 394210"></div>
+      <div class="field"><label data-i18n="i18n_lbl_full_name">Full name</label><input id="pb-name" placeholder="e.g. Sneha Shah"></div>
+      <div class="field"><label data-i18n="i18n_lbl_mobile">Mobile number</label><input id="pb-mobile" placeholder="10-digit mobile number"></div>
+      <div class="field"><label data-i18n="i18n_lbl_address">Delivery address</label><textarea id="pb-address" rows="2" placeholder="House/street, area, city"></textarea></div>
+      <div class="field"><label data-i18n="i18n_lbl_pincode">PIN code</label><input id="pb-pincode" maxlength="6" placeholder="e.g. 394210"></div>
       <button class="gold" style="width:100%;" onclick="saveBuyerProfile()">Save and continue</button>
       <div id="pb-message"></div>
     </div>
@@ -279,15 +325,15 @@
   <!-- FARMER -->
   <div class="view" id="view-farmer">
     <div class="tabs">
-      <button class="tab-btn active" data-tab="farmer-profile" onclick="switchTab('farmer','profile')">My profile</button>
-      <button class="tab-btn" data-tab="farmer-products" onclick="switchTab('farmer','products')">My produce</button>
-      <button class="tab-btn" data-tab="farmer-requests" onclick="switchTab('farmer','requests')">Buyer requests</button>
-      <button class="tab-btn" data-tab="farmer-report" onclick="switchTab('farmer','report')">Report</button>
+      <button class="tab-btn active" data-tab="farmer-profile" onclick="switchTab('farmer','profile')" data-i18n="i18n_tab_profile">My profile</button>
+      <button class="tab-btn" data-tab="farmer-products" onclick="switchTab('farmer','products')" data-i18n="i18n_tab_products">My products</button>
+      <button class="tab-btn" data-tab="farmer-requests" onclick="switchTab('farmer','requests')" data-i18n="i18n_tab_buyer_requests">Buyer requests</button>
+      <button class="tab-btn" data-tab="farmer-report" onclick="switchTab('farmer','report')" data-i18n="i18n_tab_report">Report</button>
     </div>
 
     <div id="farmer-tab-profile">
       <div class="section-head">
-        <h3>My profile</h3>
+        <h3 data-i18n="i18n_h_my_profile">My profile</h3>
         <button class="secondary small" id="btn-toggle-farmer-profile" onclick="toggleProfileView('farmer')">View profile</button>
       </div>
       <div class="card" id="farmer-profile-view" style="display:none;"></div>
@@ -295,24 +341,30 @@
 
     <div id="farmer-tab-products" style="display:none;">
       <div class="section-head">
-        <h3>My listings</h3>
-        <button class="gold small" id="btn-toggle-add-form" onclick="toggleAddForm()">+ List new produce</button>
+        <h3 data-i18n="i18n_h_my_listings">My listings</h3>
+        <button class="gold small" id="btn-toggle-add-form" onclick="toggleAddForm()" data-i18n="i18n_btn_list_new">+ List new product</button>
       </div>
       <div class="card" id="add-product-card" style="display:none;margin-bottom:24px;">
-        <h3 style="margin-bottom:16px;">List new produce</h3>
+        <h3 style="margin-bottom:16px;" data-i18n="i18n_h_list_new_product">List new product</h3>
         <div class="grid-2">
-          <div class="field"><label>Produce name</label><input id="p-name" placeholder="e.g. Tomatoes"></div>
-          <div class="field"><label>Category</label>
-            <select id="p-category"><option>Vegetables</option><option>Fruits</option><option>Grains</option><option>Pulses</option><option>Dairy</option><option>Spices</option><option>Other</option></select>
+          <div class="field"><label data-i18n="i18n_lbl_category">Category</label>
+            <select id="p-category" onchange="onCategoryChange()"></select>
           </div>
-          <div class="field"><label>Your rate (₹)</label><input id="p-price" type="number" min="0" step="0.01" placeholder="e.g. 25"></div>
-          <div class="field"><label>Per unit</label><select id="p-unit"><option>kg</option><option>quintal</option><option>dozen</option><option>litre</option><option>piece</option></select></div>
-          <div class="field"><label>Quantity available</label><input id="p-qty" type="number" min="0" placeholder="e.g. 100"></div>
+          <div class="field"><label data-i18n="i18n_lbl_product_name">Product name</label>
+            <select id="p-name-select" onchange="onProductNameChange()"></select>
+          </div>
+          <div class="field" id="p-name-custom-field" style="display:none;">
+            <label>Enter product name</label>
+            <input id="p-name-custom" placeholder="e.g. Dragon Fruit">
+          </div>
+          <div class="field"><label data-i18n="i18n_lbl_rate">Your rate (₹)</label><input id="p-price" type="number" min="0" step="0.01" placeholder="e.g. 25"></div>
+          <div class="field"><label data-i18n="i18n_lbl_per_unit">Per unit</label><select id="p-unit"><option>kg</option><option>quintal</option><option>dozen</option><option>litre</option><option>piece</option></select></div>
+          <div class="field"><label data-i18n="i18n_lbl_qty">Quantity available</label><input id="p-qty" type="number" min="0" placeholder="e.g. 100"></div>
         </div>
-        <div class="field"><label>Notes (optional)</label><textarea id="p-notes" rows="2" placeholder="Organic, harvested this week, etc."></textarea></div>
+        <div class="field"><label data-i18n="i18n_lbl_notes">Notes (optional)</label><textarea id="p-notes" rows="2" placeholder="Organic, harvested this week, etc."></textarea></div>
         <div style="display:flex;gap:10px;">
-          <button class="gold" onclick="addProduct()">Add to my listings</button>
-          <button class="secondary" onclick="toggleAddForm(false)">Cancel</button>
+          <button class="gold" onclick="addProduct()" data-i18n="i18n_btn_add_listing">Add to my listings</button>
+          <button class="secondary" onclick="toggleAddForm(false)" data-i18n="i18n_btn_cancel">Cancel</button>
         </div>
         <div id="product-form-message"></div>
       </div>
@@ -325,7 +377,7 @@
     </div>
 
     <div id="farmer-tab-requests" style="display:none;">
-      <div class="section-head"><h3>Requests from buyers</h3></div>
+      <div class="section-head"><h3 data-i18n="i18n_h_requests_from_buyers">Requests from buyers</h3></div>
       <div class="date-range-row">
         <div class="field"><label>Requested from</label><input type="date" id="farmer-req-date-from" onchange="setFarmerRequestDateFilter('from', this.value)"></div>
         <div class="field"><label>Requested to</label><input type="date" id="farmer-req-date-to" onchange="setFarmerRequestDateFilter('to', this.value)"></div>
@@ -336,7 +388,7 @@
     </div>
 
     <div id="farmer-tab-report" style="display:none;">
-      <div class="section-head"><h3>Transaction report</h3></div>
+      <div class="section-head"><h3 data-i18n="i18n_h_transaction_report">Transaction report</h3></div>
       <div class="date-range-row">
         <div class="field"><label>From</label><input type="date" id="farmer-report-date-from" onchange="setFarmerReportDate('from', this.value)"></div>
         <div class="field"><label>To</label><input type="date" id="farmer-report-date-to" onchange="setFarmerReportDate('to', this.value)"></div>
@@ -351,15 +403,15 @@
   <!-- BUYER -->
   <div class="view" id="view-buyer">
     <div class="tabs">
-      <button class="tab-btn active" data-tab="buyer-profile" onclick="switchTab('buyer','profile')">My profile</button>
-      <button class="tab-btn" data-tab="buyer-browse" onclick="switchTab('buyer','browse')">Browse produce</button>
-      <button class="tab-btn" data-tab="buyer-orders" onclick="switchTab('buyer','orders')">My requests</button>
-      <button class="tab-btn" data-tab="buyer-report" onclick="switchTab('buyer','report')">Report</button>
+      <button class="tab-btn active" data-tab="buyer-profile" onclick="switchTab('buyer','profile')" data-i18n="i18n_tab_profile">My profile</button>
+      <button class="tab-btn" data-tab="buyer-browse" onclick="switchTab('buyer','browse')" data-i18n="i18n_tab_browse">Browse products</button>
+      <button class="tab-btn" data-tab="buyer-orders" onclick="switchTab('buyer','orders')" data-i18n="i18n_tab_my_requests">My requests</button>
+      <button class="tab-btn" data-tab="buyer-report" onclick="switchTab('buyer','report')" data-i18n="i18n_tab_report">Report</button>
     </div>
 
     <div id="buyer-tab-profile">
       <div class="section-head">
-        <h3>My profile</h3>
+        <h3 data-i18n="i18n_h_my_profile">My profile</h3>
         <button class="secondary small" id="btn-toggle-buyer-profile" onclick="toggleProfileView('buyer')">View profile</button>
       </div>
       <div class="card" id="buyer-profile-view" style="display:none;"></div>
@@ -385,7 +437,7 @@
     </div>
 
     <div id="buyer-tab-report" style="display:none;">
-      <div class="section-head"><h3>Transaction report</h3></div>
+      <div class="section-head"><h3 data-i18n="i18n_h_transaction_report">Transaction report</h3></div>
       <div class="date-range-row">
         <div class="field"><label>From</label><input type="date" id="buyer-report-date-from" onchange="setBuyerReportDate('from', this.value)"></div>
         <div class="field"><label>To</label><input type="date" id="buyer-report-date-to" onchange="setBuyerReportDate('to', this.value)"></div>
@@ -400,9 +452,9 @@
   <!-- ADMIN -->
   <div class="view" id="view-admin">
     <div class="tabs">
-      <button class="tab-btn active" data-tab="admin-pending" onclick="switchTab('admin','pending')">Pending approval</button>
-      <button class="tab-btn" data-tab="admin-all" onclick="switchTab('admin','all')">All users</button>
-      <button class="tab-btn" data-tab="admin-report" onclick="switchTab('admin','report')">Report</button>
+      <button class="tab-btn active" data-tab="admin-pending" onclick="switchTab('admin','pending')" data-i18n="i18n_tab_pending">Pending approval</button>
+      <button class="tab-btn" data-tab="admin-all" onclick="switchTab('admin','all')" data-i18n="i18n_tab_all_users">All users</button>
+      <button class="tab-btn" data-tab="admin-report" onclick="switchTab('admin','report')" data-i18n="i18n_tab_report">Report</button>
     </div>
     <div id="admin-tab-pending">
       <div class="date-range-row">
@@ -421,7 +473,7 @@
       <div class="table-wrap" id="admin-all-wrap"></div>
     </div>
     <div id="admin-tab-report" style="display:none;">
-      <div class="section-head"><h3>Platform transaction report</h3></div>
+      <div class="section-head"><h3 data-i18n="i18n_h_platform_report">Platform transaction report</h3></div>
       <div class="date-range-row">
         <div class="field"><label>From</label><input type="date" id="admin-report-date-from" onchange="setAdminReportDate('from', this.value)"></div>
         <div class="field"><label>To</label><input type="date" id="admin-report-date-to" onchange="setAdminReportDate('to', this.value)"></div>

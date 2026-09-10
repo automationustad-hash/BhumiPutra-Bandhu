@@ -32,12 +32,77 @@ let farmerReportDateFilter = { from:'', to:'' };
 let buyerReportDateFilter = { from:'', to:'' };
 let adminReportDateFilter = { from:'', to:'' };
 const CATEGORY_LIST = ['Vegetables','Fruits','Grains','Pulses','Dairy','Spices','Other'];
+const PRODUCT_CATALOG = {
+  Vegetables: ['Tomato','Potato','Onion','Brinjal (Eggplant)','Okra (Bhindi)','Cauliflower','Cabbage','Green Chilli','Capsicum','Carrot','Radish','Beetroot','Cucumber','Bottle Gourd (Lauki)','Ridge Gourd (Turai)','Bitter Gourd (Karela)','Pumpkin','Spinach (Palak)','Fenugreek Leaves (Methi)','Coriander Leaves','Green Peas','Cluster Beans (Guar)','Drumstick (Moringa)','Sweet Potato','Garlic','Ginger'],
+  Fruits: ['Banana','Mango','Papaya','Guava','Sapota (Chikoo)','Grapes','Pomegranate','Watermelon','Muskmelon','Sweet Lime (Mosambi)','Orange','Lemon','Custard Apple (Sitaphal)','Jamun','Apple'],
+  Grains: ['Wheat','Rice (Paddy)','Bajra (Pearl Millet)','Jowar (Sorghum)','Maize (Corn)','Ragi (Finger Millet)'],
+  Pulses: ['Toor Dal (Pigeon Pea)','Chana (Chickpea)','Moong (Green Gram)','Urad (Black Gram)','Masoor (Lentil)','Groundnut (Peanut)'],
+  Dairy: ['Cow Milk','Buffalo Milk','Ghee','Paneer','Curd (Dahi)','Buttermilk (Chaas)'],
+  Spices: ['Turmeric (Haldi)','Red Chilli','Coriander Seeds','Cumin (Jeera)','Mustard Seeds','Fenugreek Seeds (Methi)'],
+  Other: []
+};
+
 
 let modalOrderId = null;
 let modalViewerRole = null;
 
 /* ---------- BOOT ---------- */
-window.addEventListener('load', init);
+/* ---------- LANGUAGE (English / Hindi / Gujarati) ---------- */
+let currentLang = 'en';
+const TRANSLATIONS = {
+  i18n_tab_profile:          { en:'My profile',            hi:'मेरी प्रोफ़ाइल',            gu:'મારી પ્રોફાઇલ' },
+  i18n_tab_products:         { en:'My products',           hi:'मेरे उत्पाद',               gu:'મારા ઉત્પાદનો' },
+  i18n_tab_buyer_requests:   { en:'Buyer requests',        hi:'खरीदार अनुरोध',             gu:'ખરીદનારની વિનંતીઓ' },
+  i18n_tab_report:           { en:'Report',                hi:'रिपोर्ट',                   gu:'અહેવાલ' },
+  i18n_tab_browse:           { en:'Browse products',       hi:'उत्पाद देखें',              gu:'ઉત્પાદનો જુઓ' },
+  i18n_tab_my_requests:      { en:'My requests',           hi:'मेरे अनुरोध',               gu:'મારી વિનંતીઓ' },
+  i18n_tab_pending:          { en:'Pending approval',      hi:'स्वीकृति लंबित',            gu:'મંજૂરી બાકી' },
+  i18n_tab_all_users:        { en:'All users',             hi:'सभी उपयोगकर्ता',            gu:'બધા વપરાશકર્તાઓ' },
+  i18n_lbl_full_name:        { en:'Full name',             hi:'पूरा नाम',                  gu:'પૂરું નામ' },
+  i18n_lbl_mobile:           { en:'Mobile number',         hi:'मोबाइल नंबर',               gu:'મોબાઇલ નંબર' },
+  i18n_lbl_pincode:          { en:'PIN code',              hi:'पिन कोड',                   gu:'પિન કોડ' },
+  i18n_lbl_category:         { en:'Category',              hi:'श्रेणी',                    gu:'શ્રેણી' },
+  i18n_h_my_profile:         { en:'My profile',            hi:'मेरी प्रोफ़ाइल',            gu:'મારી પ્રોફાઇલ' },
+  i18n_h_transaction_report: { en:'Transaction report',    hi:'लेन-देन रिपोर्ट',           gu:'વ્યવહાર અહેવાલ' },
+  i18n_h_platform_report:    { en:'Platform transaction report', hi:'प्लेटफ़ॉर्म लेन-देन रिपोर्ट', gu:'પ્લેટફોર્મ વ્યવહાર અહેવાલ' },
+  i18n_lbl_i_am_a:           { en:'I am a...',             hi:'मैं हूँ...',                gu:'હું છું...' },
+  i18n_lbl_land:             { en:'Land space (acres/bigha)', hi:'भूमि क्षेत्र (एकड़/बीघा)', gu:'જમીન વિસ્તાર (એકર/વીઘા)' },
+  i18n_lbl_village:          { en:'Village',               hi:'गाँव',                      gu:'ગામ' },
+  i18n_lbl_address:          { en:'Delivery address',      hi:'डिलीवरी पता',               gu:'ડિલિવરી સરનામું' },
+  i18n_lbl_product_name:     { en:'Product name',          hi:'उत्पाद का नाम',             gu:'ઉત્પાદનનું નામ' },
+  i18n_lbl_rate:             { en:'Your rate (₹)',         hi:'आपकी दर (₹)',               gu:'તમારો ભાવ (₹)' },
+  i18n_lbl_per_unit:         { en:'Per unit',              hi:'प्रति इकाई',                gu:'પ્રતિ એકમ' },
+  i18n_lbl_qty:              { en:'Quantity available',    hi:'उपलब्ध मात्रा',             gu:'ઉપલબ્ધ જથ્થો' },
+  i18n_lbl_notes:            { en:'Notes (optional)',      hi:'टिप्पणी (वैकल्पिक)',        gu:'નોંધ (વૈકલ્પિક)' },
+  i18n_h_list_new_product:   { en:'List new product',      hi:'नया उत्पाद जोड़ें',         gu:'નવું ઉત્પાદન ઉમેરો' },
+  i18n_h_my_listings:        { en:'My listings',           hi:'मेरी सूची',                 gu:'મારી યાદી' },
+  i18n_h_requests_from_buyers: { en:'Requests from buyers', hi:'खरीदारों से अनुरोध',        gu:'ખરીદનારો તરફથી વિનંતીઓ' },
+  i18n_btn_list_new:         { en:'+ List new product',    hi:'+ नया उत्पाद जोड़ें',       gu:'+ નવું ઉત્પાદન ઉમેરો' },
+  i18n_btn_add_listing:      { en:'Add to my listings',    hi:'सूची में जोड़ें',            gu:'યાદીમાં ઉમેરો' },
+  i18n_btn_cancel:           { en:'Cancel',                hi:'रद्द करें',                 gu:'રદ કરો' },
+  i18n_role_farmer:          { en:'Farmer',                hi:'किसान',                     gu:'ખેડૂત' },
+  i18n_role_farmer_desc:     { en:'I sell farm produce',   hi:'मैं खेत की उपज बेचता हूँ',  gu:'હું ખેત ઉત્પાદન વેચું છું' },
+  i18n_role_buyer:           { en:'Buyer',                 hi:'खरीदार',                    gu:'ખરીદનાર' },
+  i18n_role_buyer_desc:      { en:'I want to buy produce', hi:'मैं उपज खरीदना चाहता हूँ',  gu:'મારે ઉત્પાદન ખરીદવું છે' },
+  i18n_lbl_email:            { en:'Email address',         hi:'ईमेल पता',                  gu:'ઇમેઇલ સરનામું' },
+  i18n_lbl_password:         { en:'Password',              hi:'पासवर्ड',                   gu:'પાસવર્ડ' },
+  logout:                    { en:'Log out',               hi:'लॉग आउट',                  gu:'લૉગ આઉટ' },
+};
+function t(key){
+  return (TRANSLATIONS[key] && TRANSLATIONS[key][currentLang]) || (TRANSLATIONS[key] && TRANSLATIONS[key].en) || key;
+}
+function applyTranslations(){
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+}
+function setLanguage(lang){
+  currentLang = lang;
+  applyTranslations();
+}
+
+window.addEventListener('load', () => { init(); applyTranslations(); });
+
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && modalOrderId) closeOrderModal(); });
 
 async function init(){
@@ -371,7 +436,25 @@ function toggleAddForm(forceState){
   const show = typeof forceState === 'boolean' ? forceState : card.style.display === 'none';
   card.style.display = show ? 'block' : 'none';
   btn.style.display = show ? 'none' : 'inline-block';
-  if (!show) document.getElementById('product-form-message').innerHTML = '';
+  if (!show) { document.getElementById('product-form-message').innerHTML = ''; return; }
+  populateCategorySelect();
+  onCategoryChange();
+}
+function populateCategorySelect(){
+  const sel = document.getElementById('p-category');
+  sel.innerHTML = CATEGORY_LIST.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+function onCategoryChange(){
+  const category = document.getElementById('p-category').value;
+  const list = PRODUCT_CATALOG[category] || [];
+  const nameSelect = document.getElementById('p-name-select');
+  const options = list.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  nameSelect.innerHTML = options + `<option value="__other__">Other (type it in)</option>`;
+  onProductNameChange();
+}
+function onProductNameChange(){
+  const isOther = document.getElementById('p-name-select').value === '__other__';
+  document.getElementById('p-name-custom-field').style.display = isOther ? 'block' : 'none';
 }
 
 /* ---------- FARMER DATA ---------- */
@@ -381,21 +464,26 @@ async function loadFarmerData(){
 }
 
 async function addProduct(){
-  const name = document.getElementById('p-name').value.trim();
   const category = document.getElementById('p-category').value;
+  const nameSelectValue = document.getElementById('p-name-select').value;
+  const name = nameSelectValue === '__other__'
+    ? document.getElementById('p-name-custom').value.trim()
+    : nameSelectValue;
   const price = parseFloat(document.getElementById('p-price').value);
   const unit = document.getElementById('p-unit').value;
   const qty = parseFloat(document.getElementById('p-qty').value);
   const notes = document.getElementById('p-notes').value.trim();
   const msgEl = document.getElementById('product-form-message');
-  if (!name || isNaN(price) || price <= 0) { msgEl.innerHTML = '<div class="notice error" style="margin-top:12px;">Enter a produce name and a rate greater than 0.</div>'; return; }
+  if (!name) { msgEl.innerHTML = '<div class="notice error" style="margin-top:12px;">Pick a product name, or choose "Other" and type one in.</div>'; return; }
+  if (isNaN(price) || price <= 0) { msgEl.innerHTML = '<div class="notice error" style="margin-top:12px;">Enter a rate greater than 0.</div>'; return; }
 
   const { error } = await db.from('products').insert({
     farmer_id: currentProfile.id, name, category, price, unit,
     qty: isNaN(qty) ? null : qty, notes
   });
   if (error) { msgEl.innerHTML = `<div class="notice error" style="margin-top:12px;">${esc(error.message)}</div>`; return; }
-  ['p-name','p-price','p-qty','p-notes'].forEach(id => document.getElementById(id).value = '');
+  ['p-price','p-qty','p-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('p-name-custom').value = '';
   await renderFarmerProducts();
   toggleAddForm(false);
 }
@@ -425,9 +513,9 @@ async function renderFarmerProducts(){
   const filtered = withStatus.filter(x => matchesFarmerListingFilter(x.p, x.status));
 
   const wrap = document.getElementById('my-products-wrap');
-  if (!farmerProductsCache.length) { wrap.innerHTML = '<div class="empty" style="padding:20px;">You haven\'t listed any produce yet.</div>'; return; }
+  if (!farmerProductsCache.length) { wrap.innerHTML = '<div class="empty" style="padding:20px;">You haven\'t listed any product yet.</div>'; return; }
   wrap.innerHTML = `<table class="data-table"><thead>
-    <tr><th>Produce</th><th>Category</th><th>Rate</th><th>Listed qty</th><th>Sold (accepted)</th><th>Remaining</th><th>Status</th><th>Listed on</th><th>Actions</th></tr>
+    <tr><th>Product</th><th>Category</th><th>Rate</th><th>Listed qty</th><th>Sold (accepted)</th><th>Remaining</th><th>Status</th><th>Listed on</th><th>Actions</th></tr>
     <tr class="filter-row">
       <th><input type="text" class="filter-input" placeholder="Filter name..." value="${esc(farmerListingFilter.name)}" oninput="setFarmerListingFilter('name', this.value)"></th>
       <th><select class="filter-input" onchange="setFarmerListingFilter('category', this.value)">${categorySelectOptions(farmerListingFilter.category)}</select></th>
@@ -451,10 +539,32 @@ async function renderFarmerProducts(){
         <td>${remaining != null ? remaining + ' ' + p.unit : '—'}</td>
         <td><span class="status-pill status-${status}">${dot}${status === 'live' ? 'Live' : 'Sold out'}</span></td>
         <td class="dt-cell">${formatDT(p.listed_at)}</td>
-        <td class="actions-cell"><button class="secondary small" onclick="deleteProduct('${p.id}')">Remove</button></td>
+        <td class="actions-cell">
+          <button class="secondary small" onclick="editProductQty('${p.id}', ${p.qty ?? 'null'}, ${sold})">Edit qty</button>
+          <button class="secondary small" onclick="deleteProduct('${p.id}')">Remove</button>
+        </td>
       </tr>`;
     }).join('') : `<tr><td colspan="9"><div class="empty">No listings match these filters.</div></td></tr>`}
   </tbody></table>`;
+}
+async function editProductQty(productId, currentQty, sold){
+  const input = prompt(
+    `Update the listed quantity for this product.\n${sold > 0 ? `Note: ${sold} already sold (accepted) — the new total can't be less than that.\n` : ''}Leave blank for "no limit set".`,
+    currentQty === null || currentQty === undefined ? '' : String(currentQty)
+  );
+  if (input === null) return; // cancelled
+  const trimmed = input.trim();
+  if (trimmed === '') {
+    await db.from('products').update({ qty: null }).eq('id', productId);
+    await renderFarmerProducts();
+    return;
+  }
+  const newQty = parseFloat(trimmed);
+  if (isNaN(newQty) || newQty < 0) { alert('Enter a valid quantity, or leave it blank for no limit.'); return; }
+  if (newQty < sold) { alert(`This product already has ${sold} sold (accepted) — the new quantity can't be less than that.`); return; }
+  const { error } = await db.from('products').update({ qty: newQty }).eq('id', productId);
+  if (error) { alert(error.message); return; }
+  await renderFarmerProducts();
 }
 
 async function renderFarmerRequests(){
@@ -504,9 +614,9 @@ async function renderMarketplace(){
   const farmerOptions = [...new Map(marketplaceCache.map(p => [p.farmer_id, p.farmer])).entries()];
 
   const wrap = document.getElementById('marketplace-wrap');
-  if (!marketplaceCache.length) { wrap.innerHTML = '<div class="empty" style="padding:20px;">No produce listed yet.</div>'; return; }
+  if (!marketplaceCache.length) { wrap.innerHTML = '<div class="empty" style="padding:20px;">No products listed yet.</div>'; return; }
   wrap.innerHTML = `<table class="data-table"><thead>
-    <tr><th>Produce</th><th>Category</th><th>Rate</th><th>Available now</th><th>Status</th><th>Farmer</th><th>Distance</th><th>Listed on</th><th>Action</th></tr>
+    <tr><th>Product</th><th>Category</th><th>Rate</th><th>Available now</th><th>Status</th><th>Farmer</th><th>Distance</th><th>Listed on</th><th>Action</th></tr>
     <tr class="filter-row">
       <th><input type="text" class="filter-input" placeholder="Filter name..." value="${esc(marketplaceFilter.name)}" oninput="setMarketplaceFilter('name', this.value)"></th>
       <th><select class="filter-input" onchange="setMarketplaceFilter('category', this.value)">${categorySelectOptions(marketplaceFilter.category)}</select></th>
@@ -537,7 +647,7 @@ async function renderMarketplace(){
         <td class="dt-cell">${formatDT(p.listed_at)}</td>
         <td class="actions-cell"><button class="gold small" onclick="requestProduct('${p.id}')" ${canRequest ? '' : 'disabled'}>Request</button></td>
       </tr>`;
-    }).join('') : `<tr><td colspan="9"><div class="empty">No produce matches these filters.</div></td></tr>`}
+    }).join('') : `<tr><td colspan="9"><div class="empty">No products match these filters.</div></td></tr>`}
   </tbody></table>`;
 }
 
